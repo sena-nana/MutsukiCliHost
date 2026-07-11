@@ -1,0 +1,17 @@
+[package]
+name = "mutsuki-cli-host"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+
+[dependencies]
+anyhow = "1.0"
+clap = { version = "4.5", features = ["derive", "env"] }
+crossterm = "0.28"
+ratatui = "0.29"
+serde = "1.0"
+serde_json = "1.0"
+tokio = { version = "1.38", features = ["macros", "rt-multi-thread", "time"] }
+mutsuki-service-config = { path = "../MutsukiServiceHost/crates/mutsuki-service-config" }
+mutsuki-service-control = { path = "../MutsukiServiceHost/crates/mutsuki-service-control" }
+mutsuki-service-ipc = { path = "../MutsukiServiceHost/crates/mutsuki-service-ipc" }
