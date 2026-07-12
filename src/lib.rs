@@ -7,11 +7,10 @@ use crossterm::execute;
 use crossterm::terminal::{
     EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode,
 };
-use mutsuki_service_config::ServiceConfig;
 use mutsuki_service_control::{
-    ControlErrorBody, ControlMethod, ControlRequest, HealthReport, LogTailParams, LogTailResponse,
-    ServiceStatus,
+    ControlErrorBody, ControlMethod, HealthReport, LogTailParams, LogTailResponse, ServiceStatus,
 };
+use mutsuki_service_ipc::ControlClient;
 use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Constraint, Direction, Layout};
@@ -24,10 +23,10 @@ const LOG_POLL_INTERVAL: Duration = Duration::from_millis(500);
 const STATUS_POLL_INTERVAL: Duration = Duration::from_secs(2);
 const MAX_LOG_LINES: usize = 500;
 
-pub async fn run(config: ServiceConfig) -> anyhow::Result<()> {
+pub async fn run(client: ControlClient) -> anyhow::Result<()> {
     let mut app = CliApp::default();
-    refresh_status(&config, &mut app).await?;
-    refresh_logs(&config, &mut app, Some(100)).await?;
+    refresh_status(&client, &mut app).await?;
+    refresh_logs(&client, &mut app, Some(100)).await?;
 
     let mut terminal = TerminalSession::new()?;
     let mut last_log_poll = Instant::now();
@@ -37,13 +36,13 @@ pub async fn run(config: ServiceConfig) -> anyhow::Result<()> {
         terminal.terminal.draw(|frame| render(frame, &app))?;
 
         if last_log_poll.elapsed() >= LOG_POLL_INTERVAL {
-            if let Err(error) = refresh_logs(&config, &mut app, None).await {
+            if let Err(error) = refresh_logs(&client, &mut app, None).await {
                 app.last_error = Some(error.to_string());
             }
             last_log_poll = Instant::now();
         }
         if last_status_poll.elapsed() >= STATUS_POLL_INTERVAL {
-            if let Err(error) = refresh_status(&config, &mut app).await {
+            if let Err(error) = refresh_status(&client, &mut app).await {
                 app.last_error = Some(error.to_string());
             }
             last_status_poll = Instant::now();
@@ -57,10 +56,10 @@ pub async fn run(config: ServiceConfig) -> anyhow::Result<()> {
                 AppAction::None => {}
                 AppAction::Quit => app.should_quit = true,
                 AppAction::Refresh => {
-                    if let Err(error) = refresh_status(&config, &mut app).await {
+                    if let Err(error) = refresh_status(&client, &mut app).await {
                         app.last_error = Some(error.to_string());
                     }
-                    if let Err(error) = refresh_logs(&config, &mut app, None).await {
+                    if let Err(error) = refresh_logs(&client, &mut app, None).await {
                         app.last_error = Some(error.to_string());
                     }
                     last_log_poll = Instant::now();
@@ -208,9 +207,9 @@ fn render(frame: &mut ratatui::Frame<'_>, app: &CliApp) {
     frame.render_widget(Paragraph::new(footer), chunks[3]);
 }
 
-async fn refresh_status(config: &ServiceConfig, app: &mut CliApp) -> anyhow::Result<()> {
-    let status = request_control(config, ControlMethod::ServiceStatus, Value::Null).await?;
-    let health = request_control(config, ControlMethod::HealthCheck, Value::Null).await?;
+async fn refresh_status(client: &ControlClient, app: &mut CliApp) -> anyhow::Result<()> {
+    let status = request_control(client, ControlMethod::ServiceStatus, Value::Null).await?;
+    let health = request_control(client, ControlMethod::HealthCheck, Value::Null).await?;
     app.status = Some(status);
     app.health = Some(health);
     app.last_error = None;
@@ -218,12 +217,12 @@ async fn refresh_status(config: &ServiceConfig, app: &mut CliApp) -> anyhow::Res
 }
 
 async fn refresh_logs(
-    config: &ServiceConfig,
+    client: &ControlClient,
     app: &mut CliApp,
     lines: Option<usize>,
 ) -> anyhow::Result<()> {
     let response = request_control(
-        config,
+        client,
         ControlMethod::LogTail,
         json!(LogTailParams {
             cursor: app.log_cursor,
@@ -237,19 +236,11 @@ async fn refresh_logs(
 }
 
 async fn request_control<T: DeserializeOwned>(
-    config: &ServiceConfig,
+    client: &ControlClient,
     method: ControlMethod,
     params: Value,
 ) -> anyhow::Result<T> {
-    let response = mutsuki_service_ipc::request(
-        config,
-        ControlRequest {
-            token: config.control_token().to_string(),
-            method,
-            params,
-        },
-    )
-    .await?;
+    let response = client.request(method, params).await?;
     if !response.ok {
         return Err(control_error(response.error));
     }

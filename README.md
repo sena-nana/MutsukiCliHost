@@ -17,8 +17,8 @@ cargo run -- --home ../MutsukiServiceHost/.mutsuki-dev --token dev-token
 - `R`：立即刷新状态、健康和日志
 - `Esc` / `Q` / `Ctrl+C`：退出
 
-ServiceHost 的配置文件、profile、home 和 token 参数均可复用：
+CLI 不加载 ServiceHost profile 或配置文件。也可以直接指定公开控制 endpoint：
 
 ```powershell
-cargo run -- --profile default --config path/to/service.toml --home path/to/home
+cargo run -- --transport named-pipe --endpoint mutsuki --token dev-token
 ```

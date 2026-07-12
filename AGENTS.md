@@ -21,6 +21,7 @@
 5. 不实现 Agent、Bot、Provider、会话模拟、业务插件、生产 fallback 或兼容 shim。
 6. token 只用于认证，不进入界面、普通日志或错误文本。
 7. 禁止仓库外 Cargo `path`/本地 `[patch]`；跨仓库依赖使用远端 Git URL 和固定 `rev`。
+8. CLI 只构造公开 `ControlClient`；不得加载或复用服务端 `ServiceConfig`、profile 和 secret backend。
 
 ## 验证
 

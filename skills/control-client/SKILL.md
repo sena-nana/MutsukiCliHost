@@ -5,7 +5,7 @@ description: Change MutsukiCliHost ServiceHost control protocol client, IPC tran
 
 # Control Client
 
-- Consume only published ServiceHost config/control/IPC contracts.
+- Consume only published ServiceHost control/IPC contracts through `ControlClient`; never load server `ServiceConfig`.
 - Authenticate every non-test connection and keep tokens out of display and errors.
 - Preserve structured control errors and `TaskHandle` semantics for cancel/outcome operations.
 - Treat disconnect, unsupported method and unavailable backend as explicit states.

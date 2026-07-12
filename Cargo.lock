@@ -516,7 +516,6 @@ dependencies = [
  "anyhow",
  "clap",
  "crossterm",
- "mutsuki-service-config",
  "mutsuki-service-control",
  "mutsuki-service-ipc",
  "ratatui",
@@ -528,6 +527,7 @@ dependencies = [
 [[package]]
 name = "mutsuki-service-config"
 version = "0.1.0"
+source = "git+https://github.com/sena-nana/MutsukiServiceHost.git?rev=9ce802af696732d05920b0a091637138e6afc88c#9ce802af696732d05920b0a091637138e6afc88c"
 dependencies = [
  "dirs",
  "serde",
@@ -538,6 +538,7 @@ dependencies = [
 [[package]]
 name = "mutsuki-service-control"
 version = "0.1.0"
+source = "git+https://github.com/sena-nana/MutsukiServiceHost.git?rev=9ce802af696732d05920b0a091637138e6afc88c#9ce802af696732d05920b0a091637138e6afc88c"
 dependencies = [
  "futures",
  "serde",
@@ -548,6 +549,7 @@ dependencies = [
 [[package]]
 name = "mutsuki-service-ipc"
 version = "0.1.0"
+source = "git+https://github.com/sena-nana/MutsukiServiceHost.git?rev=9ce802af696732d05920b0a091637138e6afc88c#9ce802af696732d05920b0a091637138e6afc88c"
 dependencies = [
  "mutsuki-service-config",
  "mutsuki-service-control",
